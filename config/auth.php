@@ -39,7 +39,12 @@ return [
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
+            
         ],
+        'asisten' => [
+        'driver' => 'session',
+        'provider' => 'asistens',
+    ],
     ],
 
     /*
@@ -64,6 +69,10 @@ return [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Models\User::class),
         ],
+        'asistens' => [
+        'driver' => 'eloquent',
+        'model' => App\Models\Asisten::class,
+    ],
 
         // 'users' => [
         //     'driver' => 'database',

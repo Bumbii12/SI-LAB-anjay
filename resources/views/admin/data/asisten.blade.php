@@ -1,13 +1,13 @@
 @extends ('admin.app')
 
-@section('title', 'Data Asisten')
+@section("title", "Data Asisten")
 
-@section('content')
+@section("content")
     <div class="container mt-3">
         <h1 class="mb-4">Data Asisten</h1>
 
-        @if (session('success'))
-            <div class="alert alert-success shadow" style="width: 100%;">{{ session('success') }}</div>
+        @if (session("success"))
+            <div class="alert alert-success shadow" style="width: 100%;">{{ session("success") }}</div>
         @endif
 
         @if ($errors->any())
@@ -34,7 +34,7 @@
             <div class="card mb-3 shadow" style="border-radius: 10px;">
                 <div class="card-body">
                     <h5 class="card-title">Form Tambah Asisten</h5>
-                    <form action="{{ route('data.asistens.store') }}" method="POST" enctype="multipart/form-data">
+                    <form action="{{ route("data.asistens.store") }}" method="POST" enctype="multipart/form-data">
                         @csrf
 
                         <!-- NPM -->
@@ -108,8 +108,8 @@
         </div>
 
         <!-- Table Data Asisten -->
-        <div class="table-responsive shadow mb-4" style="border-radius: 10px;">
-            <table class="table table-bordered table-striped">
+        <div class="table-responsive mb-4 shadow" style="border-radius: 10px;">
+            <table class="table-bordered table-striped table">
                 <thead class="table-dark">
                     <tr>
                         <th style="background-color: #0446b0; color: white;">No</th>
@@ -127,7 +127,7 @@
                             <td>{{ $index + 1 }}</td>
                             <td>
                                 @if ($asisten->photo)
-                                    <img src="{{ asset('uploads/photos/' . $asisten->photo) }}" alt="{{ $asisten->nama }}"
+                                    <img src="{{ asset("uploads/photos/" . $asisten->photo) }}" alt="{{ $asisten->nama }}"
                                         style="width: 60px; height: 60px; object-fit: cover;">
                                 @else
                                     <span>Tidak ada foto tersedia</span>
@@ -145,14 +145,14 @@
                                 @endforeach
                             </td>
                             <td class="text-center">
-                                <a href="{{ route('asistens.edit', $asisten->id) }}"
+                                <a href="{{ route("asistens.edit", $asisten->id) }}"
                                     class="btn btn-warning btn-sm shadow">
                                     <i class="fas fa-edit"></i> Edit
                                 </a>
-                                <form action="{{ route('asistens.destroy', $asisten->id) }}" method="POST"
+                                <form action="{{ route("asistens.destroy", $asisten->id) }}" method="POST"
                                     style="display:inline;">
                                     @csrf
-                                    @method('DELETE')
+                                    @method("DELETE")
                                     <button type="submit" class="btn btn-danger btn-sm shadow"
                                         onclick="return confirm('Apakah Anda yakin ingin menghapus data ini?')">
                                         <i class="fas fa-trash"></i> Hapus
@@ -176,13 +176,13 @@
             </div>
             <!-- Right: Pagination -->
             <div>
-                {{ $asistens->links('pagination::bootstrap-4') }}
+                {{ $asistens->links("pagination::bootstrap-4") }}
             </div>
         </div>
     </div>
 
     <!-- Footer -->
-    <footer class="text-center mt-4 py-3">
+    <footer class="mt-4 py-3 text-center">
         <p class="text-muted mb-0">&copy; 2024 Hak Cipta Dilindungi [TIM PPL]</p>
     </footer>
 
@@ -190,36 +190,41 @@
     <script>
         const kelasData = @json($kelas);
 
+        // Handle "Tambah Kelas" button click
         document.getElementById('add-kelas-button').addEventListener('click', function() {
-                    const kelasContainer = document.getElementById('kelas-container');
-                    const newField = document.createElement('div');
-                    newField.classList.add('mb-3');
-                    newField.innerHTML = ` 
+            const kelasContainer = document.getElementById('kelas-container');
+            const newField = document.createElement('div');
+            newField.classList.add('mb-3');
+            newField.innerHTML = ` 
                 <label for="kelas_id[]" class="form-label">Kelas</label>
                 <select class="form-select shadow" name="kelas_id[]" required>
                     <option value="">Pilih Kelas</option>
                     ${kelasData.map(kelas => `
-                                    <option value="${kelas.id_kelas}">
-                                        ${kelas.nama_kelas} - ${kelas.mata_proyek}
-                                    </option>
-                                `).join('')}
+                            <option value="${kelas.id_kelas}">
+                                ${kelas.nama_kelas} - ${kelas.mata_proyek}
+                            </option>
+                        `).join('')}
                 </select>
                 <button type="button" class="btn btn-danger btn-sm mt-2 shadow remove-kelas-button">Hapus</button>
             `;
-                    kelasContainer.appendChild(newField);
 
-                    newField.querySelector('.remove-kelas-button').addEventListener('click', function() {
-                        newField.remove();
+            // Add new select field to container
+            kelasContainer.appendChild(newField);
 
-                    });
+            // Add listener to the "Hapus" button to remove the select field
+            newField.querySelector('.remove-kelas-button').addEventListener('click', function() {
+                newField.remove();
+            });
 
-                    $('#toggle-password').click(function() {
-                        const passwordField = $('#password-field');
-                        const type = passwordField.attr('type') === 'password' ? 'text' : 'password';
-                        passwordField.attr('type', type);
-                    });
+        });
+
+        // Handle password visibility toggle
+        $('#toggle-password').click(function() {
+            const passwordField = $('#password-field');
+            const type = passwordField.attr('type') === 'password' ? 'text' : 'password';
+            passwordField.attr('type', type);
+        });
     </script>
-
 
     <style>
         .pagination {

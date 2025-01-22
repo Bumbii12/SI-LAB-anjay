@@ -19,6 +19,7 @@ class Asisten extends Model
         return $this->belongsToMany(Kelas::class, 'asisten_kelas', 'asisten_id', 'id_kelas');
     }
 
+
     public function user() {
         return $this->belongsTo(User::class, 'npm', 'npm');
     }

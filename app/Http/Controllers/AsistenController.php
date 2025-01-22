@@ -3,15 +3,15 @@
 namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
-
+use App\Models\Kelas;
 class AsistenController extends Controller
 {
     public function dashboard()
     {
-        // Get logged-in user's data
-        $user = Auth::user(); // Fetch the authenticated user
-        
-        // Pass the data to the view
-        return view('asisten.dashboard', compact('user'));
+        $user = Auth::user(); // Get the authenticated assistant
+        $classes = $user->kelas; // Use the relationship to fetch related classes
+
+        return view('asisten.dashboard', compact('user', 'classes'));
     }
+    
 }
