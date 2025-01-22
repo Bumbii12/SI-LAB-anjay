@@ -1,0 +1,69 @@
+.layout-bg {
+    background-color: #F1F0E8;
+}
+
+.font-layout {
+    color: #3B1E54;
+}
+
+.font-layout {
+    color: #3B1E54;
+}
+
+.btn-layout {
+    background-color: #3B1E54;
+    color: #FFFF;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-layout:hover {
+    background-color: #9B7EBD;
+}
+
+.btn-layout:active {
+    background-color: #9B7EBD;
+    opacity: 1;
+}
+
+.btn-layout-send {
+    background-color: #3B1E54;
+    width: 80px;
+    height: 40px;
+    color: white;
+}
+
+.bg-items {
+    background-color: #B3C8CF;
+    border: none;
+}
+
+.tab-layout {
+    background-color: #3B1E54;
+    border: none;
+    color: white;
+}
+
+.tab-layout:hover {
+    background-color: #9B7EBD;
+    color: black;
+}
+
+.tab-layout:active {
+    background-color: #9B7EBD;
+    color: black;
+}
+
+.table thead th {
+    background-color: #9B7EBD;
+    color: white;
+}
+
+.kelas {
+    background-color: #9B7EBD;
+}
+
+.mata-proyek {
+    background-color: #9B7EBD;
+}
