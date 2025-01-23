@@ -6,6 +6,21 @@
     <div class="container">
         <h1 class="mb-5">Absensi Mahasiswa</h1>
 
+        <!-- Notifications -->
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
         <!-- Daftar Kelas -->
         <div class="list-group">
             @forelse ($kelasList as $kelas)
@@ -15,15 +30,20 @@
 
                     <!-- Dropdown Button -->
                     <div class="dropdown">
-                        <button class="btn btn-layout dropdown-toggle shadow-sm" type="button"
-                            id="dropdownMenuButton{{ $kelas->id_kelas }}" data-bs-toggle="dropdown" aria-expanded="false">
-                            Kelas
+                        <button class="btn btn-primary dropdown-toggle shadow-sm" type="button"
+                                id="dropdownMenuButton{{ $kelas->id_kelas }}" data-bs-toggle="dropdown" aria-expanded="false">
+                            Pilihan
                         </button>
                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ $kelas->id_kelas }}">
                             <li>
                                 <a class="dropdown-item"
-                                    href="{{ route("asisten.absensi.mahasiswaDetail", ["id_kelas" => $kelas->id_kelas]) }}">
+                                   href="{{ route("asisten.absensi.mahasiswaDetail", ["id_kelas" => $kelas->id_kelas]) }}">
                                     Lihat Absensi
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="#">
+                                    Hapus Kelas (Fitur Belum Aktif)
                                 </a>
                             </li>
                         </ul>

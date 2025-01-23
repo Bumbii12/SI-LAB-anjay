@@ -35,20 +35,23 @@
                     id="session{{ $i }}" 
                     role="tabpanel" 
                     aria-labelledby="session{{ $i }}-tab">
-                    <form action="{{ route('asisten.absensi.konfirmasi') }}" method="POST">
-                        @csrf
+                    @php
+                        $absensiPertemuan = $absensis->filter(function ($absensi) use ($i) {
+                            return $absensi->first() && $absensi->first()->pertemuan == $i;
+                        })->first();
+                        $tanggalAbsensi = $absensiPertemuan ? $absensiPertemuan->first()->tanggal : null;
+                    @endphp
+
+                    @if ($absensiPertemuan)
                         <div class="form-group mt-3 row">
                             <div class="col-md-1">
                                 <label for="date{{ $i }}" class="fs-5">Tanggal</label>
                             </div>
                             <div class="col-md-3">
-                                <input type="date" name="tanggal" id="date{{ $i }}" class="form-control shadow-sm" required>
-                                <input type="hidden" name="pertemuan" value="{{ $i }}">
-                                <input type="hidden" name="id_kelas" value="{{ $kelas->id_kelas }}">
+                                <input type="date" id="date{{ $i }}" class="form-control shadow-sm" value="{{ $tanggalAbsensi }}" disabled>
                             </div>
                         </div>
 
-                        <!-- Table with rounded corners and shadow -->
                         <table class="table mt-3 shadow-lg" style="border-radius: 15px; overflow: hidden;">
                             <thead>
                                 <tr class="text-white" style="background-color: #0446b0;">
@@ -59,44 +62,82 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($mahasiswas as $index => $mahasiswa)
+                                @foreach ($absensiPertemuan as $index => $absensi)
+                                    @php
+                                        $mahasiswa = $mahasiswas->firstWhere('npm', $absensi->npm);
+                                    @endphp
                                     <tr style="border-bottom: 1px solid #ddd;">
                                         <td>{{ $index + 1 }}</td>
-                                        <td>
-                                            {{ $mahasiswa->npm }}
-                                            <input type="hidden" name="npm[]" value="{{ $mahasiswa->npm }}">
-                                        </td>
+                                        <td>{{ $mahasiswa->npm }}</td>
                                         <td>{{ $mahasiswa->nama }}</td>
-                                        <td>
-                                            <div class="btn-group d-flex gap-2" role="group">
-                                                <input type="radio" class="btn-check" name="keterangan[{{ $mahasiswa->npm }}]" id="status{{ $i }}_{{ $mahasiswa->npm }}_h" value="HADIR" autocomplete="off" required>
-                                                <label class="btn btn-outline-primary btn-sm shadow-sm" for="status{{ $i }}_{{ $mahasiswa->npm }}_h">H</label>
-
-                                                <input type="radio" class="btn-check" name="keterangan[{{ $mahasiswa->npm }}]" id="status{{ $i }}_{{ $mahasiswa->npm }}_s" value="SAKIT" autocomplete="off" required>
-                                                <label class="btn btn-outline-primary btn-sm shadow-sm" for="status{{ $i }}_{{ $mahasiswa->npm }}_s">S</label>
-
-                                                <input type="radio" class="btn-check" name="keterangan[{{ $mahasiswa->npm }}]" id="status{{ $i }}_{{ $mahasiswa->npm }}_i" value="IZIN" autocomplete="off" required>
-                                                <label class="btn btn-outline-primary btn-sm shadow-sm" for="status{{ $i }}_{{ $mahasiswa->npm }}_i">I</label>
-
-                                                <input type="radio" class="btn-check" name="keterangan[{{ $mahasiswa->npm }}]" id="status{{ $i }}_{{ $mahasiswa->npm }}_a" value="ALPA" autocomplete="off" required>
-                                                <label class="btn btn-outline-primary btn-sm shadow-sm" for="status{{ $i }}_{{ $mahasiswa->npm }}_a">A</label>
-                                            </div>
-                                        </td>
+                                        <td>{{ $absensi->keterangan }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
                         </table>
-
-                        <div class="d-flex justify-content-end mt-4">
-                            <button type="submit" class="btn btn-layout-send shadow-sm">Kirim</button>
-                        </div>
-
-                        @if (session('success'))
-                            <div class="alert alert-success mt-3 shadow-sm">
-                                {{ session('success') }}
+                    @else
+                        <form action="{{ route('asisten.absensi.konfirmasi') }}" method="POST">
+                            @csrf
+                            <div class="form-group mt-3 row">
+                                <div class="col-md-1">
+                                    <label for="date{{ $i }}" class="fs-5">Tanggal</label>
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="date" name="tanggal" id="date{{ $i }}" class="form-control shadow-sm" required>
+                                    <input type="hidden" name="pertemuan" value="{{ $i }}">
+                                    <input type="hidden" name="id_kelas" value="{{ $kelas->id_kelas }}">
+                                </div>
                             </div>
-                        @endif
-                    </form>
+
+                            <table class="table mt-3 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+                                <thead>
+                                    <tr class="text-white" style="background-color: #0446b0;">
+                                        <th class="rounded-start" style="background-color: #0446b0;">No</th>
+                                        <th style="background-color: #0446b0;">NPM</th>
+                                        <th style="background-color: #0446b0;">Nama</th>
+                                        <th class="rounded-end" style="background-color: #0446b0;">Keterangan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($mahasiswas as $index => $mahasiswa)
+                                        <tr style="border-bottom: 1px solid #ddd;">
+                                            <td>{{ $index + 1 }}</td>
+                                            <td>
+                                                {{ $mahasiswa->npm }}
+                                                <input type="hidden" name="npm[]" value="{{ $mahasiswa->npm }}">
+                                            </td>
+                                            <td>{{ $mahasiswa->nama }}</td>
+                                            <td>
+                                                <div class="btn-group d-flex gap-2" role="group">
+                                                    <input type="radio" class="btn-check" name="keterangan[{{ $mahasiswa->npm }}]" id="status{{ $i }}_{{ $mahasiswa->npm }}_h" value="HADIR" autocomplete="off" required>
+                                                    <label class="btn btn-outline-primary btn-sm shadow-sm" for="status{{ $i }}_{{ $mahasiswa->npm }}_h">H</label>
+
+                                                    <input type="radio" class="btn-check" name="keterangan[{{ $mahasiswa->npm }}]" id="status{{ $i }}_{{ $mahasiswa->npm }}_s" value="SAKIT" autocomplete="off" required>
+                                                    <label class="btn btn-outline-primary btn-sm shadow-sm" for="status{{ $i }}_{{ $mahasiswa->npm }}_s">S</label>
+
+                                                    <input type="radio" class="btn-check" name="keterangan[{{ $mahasiswa->npm }}]" id="status{{ $i }}_{{ $mahasiswa->npm }}_i" value="IZIN" autocomplete="off" required>
+                                                    <label class="btn btn-outline-primary btn-sm shadow-sm" for="status{{ $i }}_{{ $mahasiswa->npm }}_i">I</label>
+
+                                                    <input type="radio" class="btn-check" name="keterangan[{{ $mahasiswa->npm }}]" id="status{{ $i }}_{{ $mahasiswa->npm }}_a" value="ALPA" autocomplete="off" required>
+                                                    <label class="btn btn-outline-primary btn-sm shadow-sm" for="status{{ $i }}_{{ $mahasiswa->npm }}_a">A</label>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+
+                            <div class="d-flex justify-content-end mt-4">
+                                <button type="submit" class="btn btn-layout-send shadow-sm">Kirim</button>
+                            </div>
+                        </form>
+                    @endif
+
+                    @if (session('success'))
+                        <div class="alert alert-success mt-3 shadow-sm">
+                            {{ session('success') }}
+                        </div>
+                    @endif
                 </div>
             @endfor
         </div>

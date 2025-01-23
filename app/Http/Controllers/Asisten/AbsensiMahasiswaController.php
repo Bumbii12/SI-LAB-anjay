@@ -7,13 +7,14 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Mahasiswa;
+
 class AbsensiMahasiswaController extends Controller
 {
     public function index()
     {
         $asistenId = Auth::id();
         
-        // Retrieve the classes managed by the assistant (based on the asisten's ID)
+        // Retrieve the classes managed by the assistant (based on the assistant's ID)
         $kelasList = Kelas::whereHas('asistens', function ($query) use ($asistenId) {
             $query->where('asistens.id', $asistenId); // Ensure the assistant is managing this class
         })->get();
@@ -31,26 +32,63 @@ class AbsensiMahasiswaController extends Controller
             ->whereHas('asistens', function ($query) use ($asistenId) {
                 $query->where('asistens.id', $asistenId);
             })
-            ->firstOrFail(); // If the class is not found, it will throw a 404
+            ->firstOrFail();
 
         // Fetch students enrolled in this class
         $mahasiswas = $kelas->mahasiswas;
 
-        return view('asisten.absensi.mahasiswaDetail', compact('kelas', 'mahasiswas'));
+        // Fetch absensi data for the class and group by pertemuan (session)
+        $absensis = AbsensiMahasiswa::where('id_kelas', $id_kelas)->get()->groupBy('pertemuan');
+
+        // Fetch all distinct pertemuan numbers dynamically
+        $pertemuanNumbers = AbsensiMahasiswa::where('id_kelas', $id_kelas)
+            ->distinct()
+            ->pluck('pertemuan');
+
+        return view('asisten.absensi.mahasiswaDetail', compact('kelas', 'mahasiswas', 'absensis', 'pertemuanNumbers'));
     }
 
+    public function konfirmasi(Request $request)
+    {
+        // Validate the input
+        $validatedData = $request->validate([
+            'tanggal' => 'required|date',
+            'pertemuan' => 'required|string',
+            'id_kelas' => 'required|string',
+            'npm' => 'required|array', // Ensure 'npm' is an array
+            'keterangan' => 'required|array', // Ensure 'keterangan' is an array
+        ]);
+    
+        try {
+            // Loop through the npm and keterangan arrays
+            foreach ($request->npm as $index => $npm) {
+                $absensi = new AbsensiMahasiswa();
+                $absensi->npm = $npm;
+                $absensi->id_kelas = $request->id_kelas;
+                $absensi->tanggal = $request->tanggal;
+                $absensi->pertemuan = $request->pertemuan;
+                $absensi->keterangan = $request->keterangan[$npm]; // Use the npm as key for keterangan
+                $absensi->save();
+            }
+    
+            return redirect()->back()->with('success', 'Attendance successfully confirmed.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to confirm attendance: ' . $e->getMessage());
+        }
+    }
+    
+    
     public function store(Request $request)
     {
         $request->validate([
             'tanggal' => 'required|date',
             'npm' => 'required|array|min:1',
-            'pertemuan' => 'required',
+            'pertemuan' => 'required|integer|min:1',
             'id_kelas' => [
                 'required',
                 'exists:kelas,id_kelas',
                 function ($attribute, $value, $fail) {
                     $asistenId = Auth::id();
-                    // Memastikan kelas yang dipilih adalah kelas yang dikelola oleh asisten yang sedang login
                     if (!Kelas::where('id_kelas', $value)
                         ->whereHas('asistens', function ($query) use ($asistenId) {
                             $query->where('asistens.id', $asistenId);
@@ -63,37 +101,33 @@ class AbsensiMahasiswaController extends Controller
             'keterangan' => 'required|array',
             'keterangan.*' => 'required|in:HADIR,SAKIT,IZIN,ALPA',
         ]);
-
-        // Memeriksa mahasiswa yang terdaftar di kelas ini
+    
         $validNpms = Mahasiswa::whereHas('kelas', function ($query) use ($request) {
             $query->where('kelas.id_kelas', $request->id_kelas);
         })->whereIn('npm', $request->npm)->pluck('npm')->toArray();
-
-        // Memastikan semua mahasiswa yang dipilih terdaftar di kelas ini
+    
         if (count($validNpms) !== count($request->npm)) {
-            return back()->withErrors(['npm' => 'Beberapa mahasiswa tidak terdaftar di kelas ini'])->withInput();
+            return back()->withErrors(['npm' => 'Beberapa mahasiswa tidak terdaftar di kelas ini.'])->withInput();
         }
-
-        // Menyimpan data absensi mahasiswa
-        $absensis = [];
-        foreach ($request->npm as $npm) {
-            if (!isset($request->keterangan[$npm])) {
-                return back()->withErrors(['keterangan' => "Mahasiswa dengan NPM {$npm} harus memiliki keterangan."])->withInput();
+    
+        try {
+            foreach ($request->npm as $npm) {
+                if (!isset($request->keterangan[$npm])) {
+                    return back()->withErrors(['keterangan' => "Mahasiswa dengan NPM {$npm} harus memiliki keterangan."])->withInput();
+                }
+    
+                AbsensiMahasiswa::create([
+                    'npm' => $npm,
+                    'id_kelas' => $request->id_kelas,
+                    'tanggal' => $request->tanggal,
+                    'pertemuan' => $request->pertemuan,
+                    'keterangan' => $request->keterangan[$npm],
+                ]);
             }
-
-            $absensis[] = [
-                'npm' => $npm,
-                'id_kelas' => $request->id_kelas,
-                'tanggal' => $request->tanggal,
-                'pertemuan' => $request->pertemuan,
-                'keterangan' => $request->keterangan[$npm],
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
+    
+            return redirect()->route('asisten.absensi.mahasiswa')->with('success', 'Absensi berhasil disimpan.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Terjadi kesalahan saat menyimpan data: ' . $e->getMessage()])->withInput();
         }
-
-        AbsensiMahasiswa::insert($absensis);
-
-        return redirect()->route('asisten.absensi.mahasiswa')->with('success', 'Absensi berhasil disimpan.');
     }
 }
